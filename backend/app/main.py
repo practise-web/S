@@ -1,6 +1,5 @@
 from fastapi import FastAPI
-from routers import auth
-from core.firebase_init import init_firebase
+from routers import auth, user
 
 app = FastAPI(
     title="ScholarMind", 
@@ -9,8 +8,8 @@ app = FastAPI(
     docs_url="/"
 )
 
-init_firebase()
 app.include_router(auth.router)
+app.include_router(user.router)
 
 if(__name__ == "__main__"):
     import uvicorn
