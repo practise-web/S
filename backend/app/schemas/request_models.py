@@ -4,6 +4,7 @@ class UserCreate(BaseModel):
     email: EmailStr
     username: str
     password: str
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -15,6 +16,7 @@ class UserCreate(BaseModel):
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+    
     class Config:
         json_schema_extra = {
             "example": {

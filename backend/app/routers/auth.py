@@ -1,9 +1,11 @@
-from fastapi import APIRouter, status, HTTPException, Depends
-from schemas.user_schema import UserCreate, UserLogin
+from fastapi import APIRouter, status, Depends
+from schemas.request_models import UserCreate, UserLogin
+from schemas.response_models import LoginSuccess, LoginError, SignupSuccess, SignupError
 import requests
 from dotenv import dotenv_values
 from services.keycloak_service import get_admin_token
 from services.secure_routes import get_current_user
+from fastapi.responses import JSONResponse
 
 env_values = dotenv_values('.env')
 
@@ -17,7 +19,12 @@ CLIENT_SECRET = env_values["AUTH_CLIENT_SECRET"]
 
 
 @router.post("/login", 
+             response_model=LoginSuccess,
+             responses={
+                401: {"model": LoginError}
+            },
              status_code=status.HTTP_200_OK, 
+
              tags=["Authentication"],
              summary="User Login",
              description=
@@ -27,31 +34,38 @@ CLIENT_SECRET = env_values["AUTH_CLIENT_SECRET"]
 async def login(data : UserLogin):
     email = data.email
     password = data.password
-    try:
-        token_url = f"{KEYCLOAK_URL}/realms/{REALM}/protocol/openid-connect/token"
+    
+    token_url = f"{KEYCLOAK_URL}/realms/{REALM}/protocol/openid-connect/token"
 
-        data = {
-            "client_id": CLIENT_ID,
-            "client_secret": CLIENT_SECRET,
-            "grant_type": "password",        # Password-based login
-            "username": email,
-            "password": password,
-            "scope": "openid profile email",
-        }
+    data = {
+        "client_id": CLIENT_ID,
+        "client_secret": CLIENT_SECRET,
+        "grant_type": "password",        # Password-based login
+        "username": email,
+        "password": password,
+        "scope": "openid profile email",
+    }
 
-        headers = {"Content-Type": "application/x-www-form-urlencoded"}
-        response = requests.post(token_url, data=data, headers=headers)
-        if response.status_code != 200:
-            raise HTTPException(status_code=401, detail="Invalid username or password")
-
-        return response.json()
-    except Exception as e:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
+    headers = {"Content-Type": "application/x-www-form-urlencoded"}
+    response = requests.post(token_url, data=data, headers=headers)
+    if response.status_code != 200:
+        return JSONResponse(
+            status_code=401,
+            content=LoginError(message="Invalid credentials").model_dump()
+        )
+    
+    return response.json()
+    
 
 
 
 @router.post("/signup", 
+             response_model=SignupSuccess,
+             responses={
+                500: {"model": SignupError}
+            },
              status_code=status.HTTP_201_CREATED, 
+             
              tags=["Authentication"],
              summary="User Signup",
              description=
@@ -82,12 +96,19 @@ async def signup(data : UserCreate):
         )
 
         if create_user_res.status_code not in [201, 204]:
-            raise HTTPException(status_code=500, detail="Failed to create user")
+            return JSONResponse(
+                status_code=500,
+                content=SignupError(message="Failed to create the user").model_dump()
+            )
         
         # ----------- Step 2: Get user ID from Location header -----------
         user_id = create_user_res.headers.get("Location")
         if not user_id:
-            raise HTTPException(status_code=500, detail="Failed to extract user ID")
+            return JSONResponse(
+                status_code=500,
+                content=SignupError(message="Failed to extract user ID").model_dump()
+            )
+
         user_id = user_id.split("/")[-1]
 
         # ------------ Step 3: Set password -----------
@@ -104,12 +125,21 @@ async def signup(data : UserCreate):
         )
 
         if reset_pass_res.status_code != 204:
-            raise HTTPException(status_code=400, detail="Failed to set password")
+            return JSONResponse(
+                status_code=500,
+                content=SignupError(message="Failed to set password").model_dump()
+            )
 
-        return {"message": "User created successfully"}
+        return JSONResponse(
+            status_code=201,
+            content=SignupSuccess(message="User created successfully", user_id=user_id).model_dump()
+        )
 
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        return JSONResponse(
+            status_code=500,
+            content=SignupError(message="Failed to create the user").model_dump()
+        )
 
 
 @router.post('/ping', 
