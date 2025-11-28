@@ -1,15 +1,16 @@
-from dotenv import dotenv_values
+from dotenv import load_dotenv
 import requests
+import os
 from fastapi import HTTPException, status
 from jose import jwt
 from jose.exceptions import JWTError, ExpiredSignatureError
 
-env_values = dotenv_values(".env")
+load_dotenv()
 
-KEYCLOAK_URL = env_values["KEYCLOAK_URL"]
-REALM = env_values["KEYCLOAK_REALM"]
-CLIENT_ID = env_values["AUTH_CLIENT_ID"]
-CLIENT_SECRET = env_values["AUTH_CLIENT_SECRET"]
+KEYCLOAK_URL = os.environ.get("KEYCLOAK_URL")
+REALM = os.environ.get("KEYCLOAK_REALM")
+CLIENT_ID = os.environ.get("AUTH_CLIENT_ID")
+CLIENT_SECRET = os.environ.get("AUTH_CLIENT_SECRET")
 
 JWKS_CACHE = None
 
