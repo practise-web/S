@@ -30,8 +30,10 @@ services:
   # - Connected to PostgreSQL via keycloak-network
   # - Configured for development mode with HTTP enabled
   keycloak:
-    image: quay.io/keycloak/keycloak:latest
     container_name: keycloak
+    build:
+      context: .
+      dockerfile: Dockerfile.keycloak
     environment:
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
@@ -51,6 +53,23 @@ services:
         condition: service_healthy
     networks:
       - keycloak-network
+
+  backend:
+    container_name: backend_app
+    build: 
+      context: .
+      dockerfile: Dockerfile.backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+    environment:
+      KEYCLOAK_URL: "http://keycloak:8080"
+    networks:
+      - keycloak-network
+    ports:
+      - "8000:8000"
 
 volumes:
   postgres_data:

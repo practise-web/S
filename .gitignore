@@ -1,8 +1,4 @@
-AI\venv
-AI\similarity_search_pipeline\app.env
-AI\notebooks
-AI\similarity_search_pipeline\__pycache__
-AI\prompts
-backend
-docs
-frontend
+.env
+.venv/
+__pycache__/
+firebase_key.json

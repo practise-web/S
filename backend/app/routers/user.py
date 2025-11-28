@@ -1,12 +1,13 @@
 from fastapi import APIRouter, Depends, status
-from services.secure_routes import get_current_user
+from app.services.secure_routes import get_current_user
 
 router = APIRouter(
     prefix="/user",
     tags=["User"],
 )
 
-@router.get("/info", status_code=status.HTTP_200_OK,  summary="Get current user info")
+
+@router.get("/info", status_code=status.HTTP_200_OK, summary="Get current user info")
 async def get_user_info(user=Depends(get_current_user)):
     """
     Returns information about the currently authenticated user.

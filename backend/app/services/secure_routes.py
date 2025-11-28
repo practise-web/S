@@ -1,5 +1,5 @@
 from fastapi import Header, HTTPException
-from .keycloak_service import verify_token
+from app.services.keycloak_service import verify_token
 
 
 def get_current_user(authorization: str = Header(...)):
