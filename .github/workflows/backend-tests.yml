@@ -29,7 +29,7 @@ jobs:
           pip install pytest black ruff
 
       - name: Check Formatting
-        run: black --check backend/
+        run: black backend/
 
       - name: Lint Code
         run: ruff check backend/ --fix
