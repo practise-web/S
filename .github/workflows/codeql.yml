@@ -7,12 +7,14 @@ on:
       - '**.md'
       - 'Docs/**'
       - 'Contribution/**'
+      - '**.tex'
   pull_request:
     branches: [ master ]
     paths-ignore:
       - '**.md'
       - 'Docs/**'
       - 'Contribution/**'
+      - '**.tex'
   schedule:
     - cron: "0 0 * * *"
 
