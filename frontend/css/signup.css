@@ -1,0 +1,115 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: "Poppins", sans-serif;
+}
+
+.bg-container {
+    width: 100%;
+    height: 100vh;
+    background: url(../images/Wave.png) no-repeat;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+
+.overlay-blur {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backdrop-filter: blur(8px);
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* CARD */
+.signup-card {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    width: 400px;
+    padding: 36px;
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0px 10px 30px rgba(0,0,0,0.25);
+
+    text-align: center;
+}
+
+.signup-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #121212;
+    margin-bottom: 6px;
+}
+
+.signup-sub {
+    color: #555;
+    margin-bottom: 24px;
+}
+
+/* INPUTS */
+.input-group {
+    text-align: left;
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #000;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 12px 14px;
+    margin-top: 6px;
+    border: 1px solid #dadada;
+    border-radius: 10px;
+    font-size: 14px;
+    background: #fff;
+    color: #000;
+    box-sizing: border-box;
+}
+
+.input-group input::placeholder {
+    color: #777;
+}
+
+/* BUTTON */
+.signup-btn {
+    width: 100%;
+    padding: 12px;
+    margin-top: 16px;
+
+    background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.25s;
+}
+
+.signup-btn:hover {
+    opacity: 0.9;
+}
+
+/* SWITCH TO LOGIN */
+.login-text {
+    margin-top: 18px;
+    color: #333;
+}
+
+.login-link {
+    color: #3B82F6;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.login-link:hover {
+    opacity: 0.8;
+}
+
