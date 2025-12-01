@@ -13,3 +13,13 @@ General role: Code Maintainer, Backend Lead
 - Reviewed 1 PR from a teammate:
     - added formatLy pdf parser (PR #1)
 
+
+# Abdulrahman (Nov 2025)
+
+General role: Code Maintainer, Backend Lead
+
+## Backend
+- Applied CI/CD pipelines and created github actions
+- Added an automatic code analysis on the codebase
+- Improved the backend architecture + Dockerization (PR #17)
+
