@@ -16,7 +16,7 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       packages: write  # required to push to GHCR
       id-token: write  # optional if using OIDC auth
       
@@ -36,7 +36,7 @@ jobs:
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
-          username: abdualrimali
+          username: greencode101
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Docker image
