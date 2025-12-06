@@ -8,7 +8,7 @@ async function login() {
     }
 
     try {
-        const res = await fetch("http://127.0.0.1:8000/auth/login", {
+        const res = await fetch("https://accommodative-dusti-subpetiolate.ngrok-free.dev/auth/login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, password })
