@@ -1,0 +1,50 @@
+name: "Deployment"
+
+on: 
+  workflow_dispatch:  # allows manual trigger
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - "Docs/**"
+      - "Contribution/**"
+      - ".github/**"
+      - ".gitignore"
+      - "README.md"
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write  # required to push to GHCR
+      id-token: write  # optional if using OIDC auth
+      
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Check if secret exists
+        run: |
+          if [ -z "${{ secrets.GITHUB_TOKEN }}" ]; then
+            echo "GITHUB_TOKEN is empty!"
+          else
+            echo "GITHUB_TOKEN is set!"
+          fi
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: greencode101
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Docker image
+        run: |
+          docker build -t ghcr.io/greencode101/scholarmind/backend:latest ./backend
+
+      - name: Push Docker image
+        run: |
+          docker push ghcr.io/greencode101/scholarmind/backend:latest
+
+

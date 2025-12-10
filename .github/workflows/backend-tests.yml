@@ -1,0 +1,51 @@
+name: FastAPI CI
+
+on: 
+  push:
+    paths:
+      - "backend/**"
+  pull_request:
+    paths:
+      - "backend/**"
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      PYTHONPATH: backend
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r backend/requirements.txt
+          pip install pytest black ruff
+
+      - name: Check Formatting
+        run: black backend/
+
+      - name: Lint Code
+        run: ruff check backend/ --fix
+
+      - name: Lint Formatting
+        run: ruff format backend/
+
+      - name: Type Check with Pyright
+        run: pyright backend
+
+      - name: Run Tests
+        run: pytest backend/app/tests/ --durations=0 -v
+        env:
+          KEYCLOAK_URL: "http://localhost:8080"
+          KEYCLOAK_REALM: "master"
+          AUTH_CLIENT_ID: "service-auth"
+          AUTH_CLIENT_SECRET: ${{ secrets.AUTH_CLIENT_SECRET }}
