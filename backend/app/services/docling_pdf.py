@@ -1,14 +1,12 @@
 from docling.document_converter import DocumentConverter
 from docling.datamodel.accelerator_options import AcceleratorDevice, AcceleratorOptions
 from docling.datamodel.base_models import InputFormat
-from docling.datamodel.pipeline_options import (
-    PdfPipelineOptions,
-    AcceleratorOptions,
-    AcceleratorDevice
-)
+from docling_core.types.doc.document import PictureItem
 from docling.document_converter import DocumentConverter, PdfFormatOption
+from docling.datamodel.pipeline_options import (
+    PdfPipelineOptions
+)
 from pathlib import Path
-from docling_core.types.doc import PictureItem
 
 
 class ArixParse:
@@ -65,5 +63,5 @@ def runPDF(pdf: str):
     output_dir.mkdir(parents=True, exist_ok=True)
     with open(f"output/{fileName}/text.md", "w", encoding="utf-8") as f:
         f.write(doc.export_to_markdown())
-    save_extracted_images(doc, output_dir / "extracted_images")
+    save_extracted_images(doc, str(output_dir / "extracted_images"))
 
