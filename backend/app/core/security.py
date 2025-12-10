@@ -9,6 +9,7 @@ import time
 logger = logging.getLogger("app.middleware")
 REQUEST_ID_HEADER = "X-Request-ID"
 
+
 def setup_middlewares(app):
     # -------------------------
     # CORS middleware
@@ -20,16 +21,15 @@ def setup_middlewares(app):
 
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=origins,       # which origins can access
-        allow_credentials=True,      # allow cookies/auth headers
-        allow_methods=["*"],         # GET, POST, PUT, etc.
-        allow_headers=["*"],         # allow custom headers
+        allow_origins=origins,  # which origins can access
+        allow_credentials=True,  # allow cookies/auth headers
+        allow_methods=["*"],  # GET, POST, PUT, etc.
+        allow_headers=["*"],  # allow custom headers
     )
 
     # -------------------------
     # Request ID middleware
     # -------------------------
-
 
     @app.middleware("http")
     async def request_id_middleware(request: Request, call_next):
@@ -57,5 +57,3 @@ def setup_middlewares(app):
             f"{request.method} {request.url.path} completed in {process_time:.5f} ms with status {response.status_code}"
         )
         return response
-
-

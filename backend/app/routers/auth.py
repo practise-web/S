@@ -113,7 +113,9 @@ async def signup(input_data: UserCreate, request: Request):
         )
 
         if create_user_res.status_code not in [201, 204]:
-            logger.error(f"[{req_id}] Failed to create user {username}: {create_user_res.text}")
+            logger.error(
+                f"[{req_id}] Failed to create user {username}: {create_user_res.text}"
+            )
             return JSONResponse(
                 status_code=500,
                 content=SignupError(message="Failed to create the user").model_dump(),
@@ -145,8 +147,10 @@ async def signup(input_data: UserCreate, request: Request):
                 status_code=500,
                 content=SignupError(message="Failed to set password").model_dump(),
             )
-        
-        logger.info(f"[{req_id}] Successfully created user {username} with ID {user_id}")
+
+        logger.info(
+            f"[{req_id}] Successfully created user {username} with ID {user_id}"
+        )
         return JSONResponse(
             status_code=201,
             content=SignupSuccess(

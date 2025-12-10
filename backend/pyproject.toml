@@ -17,6 +17,7 @@ dependencies = [
     "python-jose>=3.5.0",
     "slowapi>=0.1.9",
     "uvicorn>=0.37.0",
+    "werkzeug>=3.1.4",
 ]
 
 [dependency-groups]
