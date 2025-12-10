@@ -1,5 +1,5 @@
-from services.docling_pdf import runPDF
-from schemas.doc_schema import ParseRequest
+from app.services.docling_pdf import runPDF
+from app.schemas.doc_schema import ParseRequest
 from fastapi import APIRouter, status, HTTPException
 from fastapi.responses import JSONResponse
 
