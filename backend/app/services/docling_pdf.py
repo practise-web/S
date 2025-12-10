@@ -7,7 +7,9 @@ from docling.datamodel.pipeline_options import (
     PdfPipelineOptions
 )
 from pathlib import Path
+import os
 
+SAFE_BASE_DIR = Path("output").resolve()
 
 class ArixParse:
     def __init__(self, pdf_path: str):
@@ -37,7 +39,11 @@ class ArixParse:
 
 
 def save_extracted_images(doc, output_folder: str):
-    output_path = Path(output_folder)
+    output_path = Path(output_folder).resolve()
+
+    if not output_path.is_relative_to(SAFE_BASE_DIR):
+        raise ValueError(f"Security Warning: Attempted to save outside '{SAFE_BASE_DIR}'")
+    
     output_path.mkdir(parents=True, exist_ok=True)
 
     image_counter = 0
@@ -59,9 +65,13 @@ def save_extracted_images(doc, output_folder: str):
 def runPDF(pdf: str):
     doc = ArixParse(pdf_path=pdf).parse()
     fileName = Path(pdf).name
-    output_dir = Path("output") / fileName
+    output_dir = (Path("output") / fileName).resolve()
+
+    if not output_dir.is_relative_to(SAFE_BASE_DIR):
+        raise ValueError(f"Security Warning: Attempted to save outside '{SAFE_BASE_DIR}'")
+    
     output_dir.mkdir(parents=True, exist_ok=True)
-    with open(f"output/{fileName}/text.md", "w", encoding="utf-8") as f:
+    with open(output_dir / "text.md", "w", encoding="utf-8") as f:
         f.write(doc.export_to_markdown())
     save_extracted_images(doc, str(output_dir / "extracted_images"))
 
