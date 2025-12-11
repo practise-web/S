@@ -1,20 +1,11 @@
 from core.pipeline import SemanticSearchPipeline
 import argparse
 
+
 def main():
     parser = argparse.ArgumentParser(description="Testing similarity search pipeline")
-    parser.add_argument(
-        "--pdf",
-        type=str,
-        required=True,
-        help= "path to input PDF file"
-    )
-    parser.add_argument(
-        "--query",
-        type=str,
-        required=True,
-        help= "search query"
-    )
+    parser.add_argument("--pdf", type=str, required=True, help="path to input PDF file")
+    parser.add_argument("--query", type=str, required=True, help="search query")
 
     args = parser.parse_args()
 

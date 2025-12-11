@@ -2,6 +2,7 @@ from langchain_community.vectorstores import FAISS
 from pathlib import Path
 import logging
 
+
 class VectorDB:
     def __init__(self, embedding_model, persist_path: str | None = None):
         self.embedding_model = embedding_model
@@ -40,5 +41,5 @@ class VectorDB:
         return FAISS.load_local(
             self.persist_path,
             self.embedding_model,
-            allow_dangerous_deserialization=True
+            allow_dangerous_deserialization=True,
         )

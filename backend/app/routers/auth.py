@@ -1,6 +1,7 @@
 from fastapi import APIRouter, status, Depends, Request
+from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import JSONResponse
-from app.schemas.request_models import UserCreate, UserLogin
+from app.schemas.request_models import UserCreate
 from app.schemas.response_models import (
     LoginSuccess,
     LoginError,
@@ -8,14 +9,14 @@ from app.schemas.response_models import (
     SignupError,
 )
 from app.services.keycloak_service import get_admin_token
-from app.services.secure_routes import get_current_user
+from app.core.security import get_current_user
 from app.core.rate_limiter import limiter
 from dotenv import load_dotenv
-import requests
 import logging
+import httpx
 import os
 
-logger = logging.getLogger("app.auth")
+logger = logging.getLogger("app.routers.auth")
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
@@ -39,8 +40,8 @@ CLIENT_SECRET = os.environ.get("AUTH_CLIENT_SECRET")
                 """,
 )
 @limiter.limit("5/minute")
-async def login(input_data: UserLogin, request: Request):
-    email = input_data.email
+async def login(request: Request, input_data: OAuth2PasswordRequestForm = Depends()):
+    email = input_data.username
     password = input_data.password
 
     req_id = getattr(request.state, "request_id", "-")
@@ -58,7 +59,10 @@ async def login(input_data: UserLogin, request: Request):
     }
 
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
-    response = requests.post(token_url, data=data, headers=headers)
+
+    async with httpx.AsyncClient() as client:
+        response = await client.post(token_url, data=data, headers=headers)
+
     if response.status_code != 200:
         logger.warning(f"[{req_id}] Failed login for email {email}: {response.text}")
         return JSONResponse(
@@ -106,14 +110,17 @@ async def signup(input_data: UserCreate, request: Request):
             "Content-Type": "application/json",
         }
 
-        create_user_res = requests.post(
-            f"{KEYCLOAK_URL}/admin/realms/{REALM}/users",
-            json=user_data,
-            headers=headers,
-        )
+        async with httpx.AsyncClient() as client:
+            create_user_res = await client.post(
+                f"{KEYCLOAK_URL}/admin/realms/{REALM}/users",
+                json=user_data,
+                headers=headers,
+            )
 
         if create_user_res.status_code not in [201, 204]:
-            logger.error(f"[{req_id}] Failed to create user {username}: {create_user_res.text}")
+            logger.error(
+                f"[{req_id}] Failed to create user {username}: {create_user_res.text}"
+            )
             return JSONResponse(
                 status_code=500,
                 content=SignupError(message="Failed to create the user").model_dump(),
@@ -133,11 +140,12 @@ async def signup(input_data: UserCreate, request: Request):
         # ------------ Step 3: Set password -----------
         password_data = {"type": "password", "value": password, "temporary": False}
 
-        reset_pass_res = requests.put(
-            f"{KEYCLOAK_URL}/admin/realms/{REALM}/users/{user_id}/reset-password",
-            json=password_data,
-            headers=headers,
-        )
+        async with httpx.AsyncClient() as client:
+            reset_pass_res = await client.put(
+                f"{KEYCLOAK_URL}/admin/realms/{REALM}/users/{user_id}/reset-password",
+                json=password_data,
+                headers=headers,
+            )
 
         if reset_pass_res.status_code != 204:
             logger.error(f"[{req_id}] Failed to set password for user {username}")
@@ -145,8 +153,10 @@ async def signup(input_data: UserCreate, request: Request):
                 status_code=500,
                 content=SignupError(message="Failed to set password").model_dump(),
             )
-        
-        logger.info(f"[{req_id}] Successfully created user {username} with ID {user_id}")
+
+        logger.info(
+            f"[{req_id}] Successfully created user {username} with ID {user_id}"
+        )
         return JSONResponse(
             status_code=201,
             content=SignupSuccess(

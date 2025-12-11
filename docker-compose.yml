@@ -54,7 +54,10 @@ services:
 
   backend:
     container_name: backend_app
-    image: ghcr.io/greencode101/scholarmind/backend:latest
+    # image: ghcr.io/greencode101/scholarmind/backend:latest
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     depends_on:
       postgres:
         condition: service_healthy

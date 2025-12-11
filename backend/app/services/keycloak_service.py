@@ -14,6 +14,7 @@ CLIENT_SECRET = os.environ.get("AUTH_CLIENT_SECRET")
 
 JWKS_CACHE = None
 
+
 def get_admin_token():
     """Get admin access token from Keycloak"""
     token_url = f"{KEYCLOAK_URL}/realms/{REALM}/protocol/openid-connect/token"

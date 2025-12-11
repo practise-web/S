@@ -5,6 +5,7 @@ description = "An AI-powered platform to assist students with their academic nee
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "docling>=2.58.0",
     "fastapi>=0.119.0",
     "firebase-admin>=7.1.0",
     "httpx>=0.28.1",
@@ -14,8 +15,10 @@ dependencies = [
     "pytest>=9.0.1",
     "python-dotenv>=1.1.1",
     "python-jose>=3.5.0",
+    "python-multipart>=0.0.20",
     "slowapi>=0.1.9",
     "uvicorn>=0.37.0",
+    "werkzeug>=3.1.4",
 ]
 
 [dependency-groups]
