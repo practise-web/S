@@ -15,8 +15,14 @@
 - Designed UI sketches for Requirement 1.
 - Built the similarity search pipeline.
 
-## October 2025
-- **Roles:** Team Lead, Technical Writer, AI Engineer
+## December 2025
+- **Roles:** Team Lead, Technical Writer
 **Contributions:**
+- Assigned tasks and coordinated team work
 - Wrote Introduction & Background Section
 
+## January 2026
+- **Roles:** Team Lead, Technical Writer,
+**Contributions:**
+- Assigned tasks and coordinated team work
+- Wrote System Analysis
