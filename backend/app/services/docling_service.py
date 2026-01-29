@@ -30,7 +30,7 @@ class ArixParse:
 
         self.pipeline_options.do_ocr = False
         self.pipeline_options.do_table_structure = True
-        self.pipeline_options.ocr_options.lang = ["eg"]
+        self.pipeline_options.ocr_options.lang = ["en"]
         self.pipeline_options.images_scale = 2.0
         self.pipeline_options.generate_page_images = False
         self.pipeline_options.generate_picture_images = True
@@ -45,7 +45,7 @@ class ArixParse:
 
 
 
-def runPDF(pdf: str):
+def parse_pdf(pdf: str):
     doc = ArixParse(pdf_path=pdf).parse()
 
     fileName = secure_filename(Path(pdf).name)

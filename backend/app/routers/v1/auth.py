@@ -1,5 +1,5 @@
 from fastapi import APIRouter, status, Depends, Request
-from fastapi.security import OAuth2PasswordRequestForm
+from app.schemas.request_models import UserCreate, UserLogin
 from fastapi.responses import JSONResponse
 from app.schemas.request_models import UserCreate
 from app.schemas.response_models import (
@@ -26,6 +26,7 @@ KEYCLOAK_URL = os.environ.get("KEYCLOAK_URL")
 REALM = os.environ.get("KEYCLOAK_REALM")
 CLIENT_ID = os.environ.get("AUTH_CLIENT_ID")
 CLIENT_SECRET = os.environ.get("AUTH_CLIENT_SECRET")
+BASE_HOSTNAME = os.environ.get("BASE_HOSTNAME")
 
 
 @router.post(
@@ -40,8 +41,8 @@ CLIENT_SECRET = os.environ.get("AUTH_CLIENT_SECRET")
                 """,
 )
 @limiter.limit("5/minute")
-async def login(request: Request, input_data: OAuth2PasswordRequestForm = Depends()):
-    email = input_data.username
+async def login(input_data: UserLogin, request: Request):
+    email = input_data.email
     password = input_data.password
 
     req_id = getattr(request.state, "request_id", "-")
@@ -97,12 +98,13 @@ async def signup(input_data: UserCreate, request: Request):
     try:
         token = get_admin_token()
 
-        # ----------- Step 1: Create the user -----------
+        # ----------- Create the user -----------
         user_data = {
             "username": username,
             "email": email,
             "enabled": True,
-            "emailVerified": False,
+            "credentials": [{"type": "password", "value": password, "temporary": False}],
+            "requiredActions": ["VERIFY_EMAIL"]
         }
 
         headers = {
@@ -126,7 +128,7 @@ async def signup(input_data: UserCreate, request: Request):
                 content=SignupError(message="Failed to create the user").model_dump(),
             )
 
-        # ----------- Step 2: Get user ID from Location header -----------
+        # ----------- Get user ID from Location header -----------
         user_id = create_user_res.headers.get("Location")
         if not user_id:
             logger.error(f"[{req_id}] Failed to extract user ID for {username}")
@@ -137,30 +139,23 @@ async def signup(input_data: UserCreate, request: Request):
 
         user_id = user_id.split("/")[-1]
 
-        # ------------ Step 3: Set password -----------
-        password_data = {"type": "password", "value": password, "temporary": False}
-
+        # ----------- Send verification email -----------
+        redirect_uri = f"{BASE_HOSTNAME}/auth/login?verified=true"
+        email_url = (
+            f"{KEYCLOAK_URL}/admin/realms/{REALM}/users/{user_id}/execute-actions-email"
+            f"?redirectUri={redirect_uri}&client_id={CLIENT_ID}"
+        )
+        actions = ["VERIFY_EMAIL"]
         async with httpx.AsyncClient() as client:
-            reset_pass_res = await client.put(
-                f"{KEYCLOAK_URL}/admin/realms/{REALM}/users/{user_id}/reset-password",
-                json=password_data,
-                headers=headers,
-            )
-
-        if reset_pass_res.status_code != 204:
-            logger.error(f"[{req_id}] Failed to set password for user {username}")
-            return JSONResponse(
-                status_code=500,
-                content=SignupError(message="Failed to set password").model_dump(),
-            )
+            await client.put(email_url, json=actions, headers=headers)
 
         logger.info(
-            f"[{req_id}] Successfully created user {username} with ID {user_id}"
+            f"[{req_id}] Successfully created user {username} with ID {user_id}. Verification email sent."
         )
         return JSONResponse(
             status_code=201,
             content=SignupSuccess(
-                message="User created successfully", user_id=user_id
+                message="User created successfully. Verification email sent.", user_id=user_id
             ).model_dump(),
         )
 

@@ -19,7 +19,15 @@ General role: Code Maintainer, Backend Lead
 General role: Code Maintainer, Backend Lead
 
 ## Backend
-- Applied CI/CD pipelines and created github actions
-- Added an automatic code analysis on the codebase
-- Improved the backend architecture + Dockerization (PR #17)
+- Applied CI/CD pipelines and created github actions.
+- Added an automatic code analysis on the codebase.
+- Improved the backend architecture + Dockerization (PR #17).
 
+# Abdulrahman (Jan 2026)
+
+## Backend
+- Built a Unified Nginx Gateway (PR #49).
+- Started API versioning for better scaling up in the future.
+- Implemented API endpoint for PDF Upload.
+- Integrated all docker containers into one single domain interface with ngrok and nginx.
+- Wrote backend design document and literature review background with IEEE refferences.
