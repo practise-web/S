@@ -23,12 +23,22 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "black>=25.11.0",
+    "black==25.11.0",
+    "colorlog==6.10.1",
+    "faker==38.2.0",
     "httpx>=0.28.1",
-    "pyright>=1.1.407",
-    "pytest>=9.0.1",
-    "pytest-mock>=3.15.1",
-    "ruff>=0.14.6",
+    "mypy-extensions==1.1.0",
+    "nodeenv==1.9.1",
+    "pathspec==0.12.1",
+    "polyfactory==3.1.0",
+    "pygments==2.19.2",
+    "pyright==1.1.407",
+    "pytest==9.0.2",
+    "pytest-mock==3.15.1",
+    "respx==0.22.0",
+    "ruff==0.14.6",
+    "shellingham==1.5.4",
+    "typing-inspection==0.4.2",
 ]
 
 [tool.pytest]
