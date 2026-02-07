@@ -1,0 +1,19 @@
+repos:
+  # 1. Gitleaks (Security Guard)
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.2
+    hooks:
+      - id: gitleaks
+
+  # 2. Ruff (The Fast Linter & Import Sorter)
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.0
+    hooks:
+      - id: ruff
+        args: [ --fix ]  # Automatically fix easy errors (like unused imports)
+
+  # 3. Black (The Code Formatter)
+  - repo: https://github.com/psf/black
+    rev: 26.1.0
+    hooks:
+      - id: black

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign Up</title>
+    <link rel="stylesheet" href="css/signup.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <div class="bg-container">
+        <div class="overlay-blur"></div>
+
+        <div class="signup-card">
+            <h2 class="signup-title">Create Account</h2>
+            <p class="signup-sub">Join ScholarMind today</p>
+
+            <div class="input-group">
+                <label>Username</label>
+                <input id="signupName" type="text" placeholder="Enter your username">
+            </div>
+
+            <div class="input-group">
+                <label>Email</label>
+                <input id="signupEmail" type="email" placeholder="Enter your email">
+            </div>
+
+            <div class="input-group">
+                <label>Password</label>
+                <input id="signupPassword" type="password" placeholder="Enter your password">
+            </div>
+
+            <button class="signup-btn" onclick="signup()">Sign Up</button>
+
+            <p class="signup-text">
+                Already have an account? 
+                <a href="login.html" class="signup-link">Login</a>
+            </p>
+        </div>
+    </div>
+
+    <script src="js/signup.js"></script>
+</body>
+</html>

@@ -1,0 +1,138 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database Service
+  # - Stores all Keycloak data (users, realms, clients)
+  # - Must be started before Keycloak
+  # - Connected to Keycloak via keycloak-network
+  # - Data persisted through postgres_data volume
+  postgres:
+    image: postgres:15
+    container_name: keycloak-postgres
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: ${KEYCLOAK_DB_USERNAME}
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "keycloak"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  # Keycloak Authentication Server
+  # - Provides OAuth2/OpenID Connect functionality
+  # - Depends on PostgreSQL for data storage
+  # - Accessible on port 8080
+  # - Connected to PostgreSQL via keycloak-network
+  # - Configured for development mode with HTTP enabled
+  keycloak:
+    container_name: keycloak
+    image: quay.io/keycloak/keycloak:latest
+    env_file:
+      - .env
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak_password
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin_password
+      KC_HOSTNAME: ${BASE_HOSTNAME}/kc
+      KC_HTTP_RELATIVE_PATH: /kc
+      KC_PROXY: edge
+      KC_HOSTNAME_STRICT: "false"
+      KC_HOSTNAME_STRICT_HTTPS: "false"
+      KC_HTTP_ENABLED: "true"
+    command:
+      - start-dev
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  backend:
+    container_name: backend
+    env_file:
+      - .env
+    # image: ghcr.io/greencode101/scholarmind/backend:latest
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    volumes:
+      # Map current directory on host to /app in container
+      - ./backend:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all          # Number of GPUs (use 'all' for all GPUs)
+              capabilities: [gpu]
+    environment:
+      NVIDIA_VISIBLE_DEVICES: all
+      NVIDIA_DRIVER_CAPABILITIES: compute,utility
+
+    networks:
+      - app-network
+    ports:
+      - "8000:8000"
+  ngrok:
+    image: ngrok/ngrok:latest
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      nginx:
+        condition: service_started
+    command:
+      - "http"
+      - "nginx:80"
+    environment:
+      NGROK_AUTHTOKEN: "${NGROK_AUTHTOKEN}"
+    networks:
+      - app-network
+    ports:
+      - 4040:4040
+  
+  mailhog:
+    image: mailhog/mailhog
+    container_name: mailhog
+    ports:
+      - "1025:1025" # SMTP port (for Keycloak)
+      - "8025:8025" # Web UI (for you)
+    networks:
+      - app-network
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "8090:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend
+      - keycloak
+    networks:
+      - app-network
+
+volumes:
+  postgres_data:
+    name: keycloak_postgres_data
+
+networks:
+  app-network:
+    name: app-network

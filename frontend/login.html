@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login</title>
+    <link rel="stylesheet" href="css/login.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <div class="bg-container">
+        <div class="overlay-blur"></div>
+
+        <div class="login-card">
+            <h2 class="login-title">Welcome Back</h2>
+            <p class="login-sub">Login to continue your research</p>
+
+            <div class="input-group">
+                <label>Email</label>
+                <input id="loginEmail" type="email" placeholder="Enter your email">
+            </div>
+
+            <div class="input-group">
+                <label>Password</label>
+                <input id="loginPassword" type="password" placeholder="Enter your password">
+            </div>
+
+            <button class="login-btn" onclick="login()">Login</button>
+
+            <p class="signup-text">
+                Don’t have an account? 
+                <a href="signup.html" class="signup-link">Sign Up</a>
+            </p>
+        </div>
+    </div>
+
+    <script src="js/login.js"></script>
+</body>
+</html>
