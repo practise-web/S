@@ -37,3 +37,4 @@ General role: Code Maintainer, Backend Lead
 
 ## Backend
 - Added additional API for Authentications such as: Logout, Password Update, Token Refresh (PR #55)
+- Fixed a big secret exposure with gitleaks
