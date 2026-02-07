@@ -1,0 +1,39 @@
+name: Security Check
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 4 * * *"
+
+jobs:
+  check-for-env-file:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Scan for .env files
+        run: |
+          if find . -name "*.env" -not -path "./.git/*" | grep -q "*.env"; then
+            echo "❌ CRITICAL ERROR: A .env file was found in the repository!"
+            echo "Please delete it immediately and remove it from git history."
+            echo "Files found:"
+            find . -name "*.env" -not -path "./.git/*"
+            exit 1
+          else
+            echo "✅ No .env files found. Good job!"
+            exit 0
+          fi
+  scan:
+    name: gitleaks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
