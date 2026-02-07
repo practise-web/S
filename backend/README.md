@@ -1,1 +1,0 @@
-Initial setup for ScholarMind backend
