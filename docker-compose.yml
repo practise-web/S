@@ -128,10 +128,42 @@ services:
       - keycloak
     networks:
       - app-network
+  minio:
+    image: quay.io/minio/minio:latest
+    container_name: minio
+    ports:
+      # MinIO API/Client port
+      - "9000:9000"
+      # MinIO Console Web UI port
+      - "9001:9001"
+    command: [ "server", "--console-address", ":9001", "/data" ]
+    volumes:
+      - data-minio:/data
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+
+  minio-buckets:
+    image: quay.io/minio/mc:latest
+    container_name: minio-buckets
+    depends_on:
+      - minio
+    restart: on-failure
+    entrypoint: >
+      /bin/sh -c "
+      # Wait for MinIO to be ready
+      sleep 5;
+      # Set alias with correct user/pass (using the correct default credentials)
+      /usr/bin/mc alias set dockerminio http://minio:9000 minioadmin minioadmin;
+      # Create the bucket
+      /usr/bin/mc mb dockerminio/yourbucketname;
+      exit 0;
+      "
 
 volumes:
   postgres_data:
     name: keycloak_postgres_data
+  data-minio:
 
 networks:
   app-network:
