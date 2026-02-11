@@ -1,6 +1,6 @@
 from fastapi import APIRouter, status, HTTPException, Depends, Request, File, UploadFile
 from app.services.docling_service import parse_pdf
-from app.core.security import get_current_user
+from app.services.keycloak_service import kc_admin
 from app.schemas.doc_schema import ParseRequest
 from fastapi.responses import JSONResponse
 from fastapi.concurrency import run_in_threadpool
@@ -23,7 +23,7 @@ router = APIRouter(prefix="/doc", tags=["Documents"])
                 """,
 )
 async def parse_url(
-    request: Request, doc: ParseRequest, user=Depends(get_current_user)
+    request: Request, doc: ParseRequest, user=Depends(kc_admin.get_current_user)
 ):
     req_id = getattr(request.state, "request_id", "-")
     logger.info(
@@ -54,7 +54,7 @@ async def parse_url(
                     """,
 )
 async def parse_upload(
-    request: Request, file: UploadFile = File(...), user=Depends(get_current_user)
+    request: Request, file: UploadFile = File(...), user=Depends(kc_admin.get_current_user)
 ):
     req_id = getattr(request.state, "request_id", "-")
 

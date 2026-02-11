@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, status
-from app.core.security import get_current_user
+from app.services.keycloak_service import kc_admin
 
 router = APIRouter(
     prefix="/users",
@@ -8,7 +8,7 @@ router = APIRouter(
 
 
 @router.get("/me", status_code=status.HTTP_200_OK, summary="Get current user info")
-async def get_user_info(user=Depends(get_current_user)):
+async def get_user_info(user=Depends(kc_admin.get_current_user)):
     """
     Returns information about the currently authenticated user.
     """

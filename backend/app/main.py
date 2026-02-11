@@ -1,15 +1,35 @@
-import logging
 from fastapi import FastAPI, APIRouter
 from app.routers.v1 import auth, user
-from app.core.security import setup_middlewares
+from app.core.middleware import PhantomTokenMiddleware, RequestIdMiddleware, LoggingMiddleware
 from app.core.logger import configure_logging, LogLevels
 from app.core.rate_limiter import limiter
+from app.core.config import redis_settings
+from contextlib import asynccontextmanager
+from starlette.middleware.cors import CORSMiddleware
+from app.core import database as db
+import redis.asyncio as redis
+import logging
 from dotenv import load_dotenv
+
 
 configure_logging(LogLevels.info)
 logger = logging.getLogger("app")
-logger.info("Starting ScholarMind application")
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info("Application startup: Initializing resources")
+    load_dotenv()
+    # Initialize resources here (e.g., database connections, caches)
+    global redis_client
+    logger.info(f"Connecting to Redis at {redis_settings.redis_url}")
+    db.redis_client = redis.from_url(str(redis_settings.redis_url), decode_responses=True)
+
+    yield
+
+    logger.info("Application shutdown: Cleaning up resources")
+    await db.redis_client.close()
+    logger.info("Redis connection closed")
+    # Clean up resources here (e.g., close database connections, flush caches)
 
 app = FastAPI(
     title="ScholarMind",
@@ -17,11 +37,23 @@ app = FastAPI(
     description="An AI-powered platform to assist students with their academic needs.",
     root_path="/api",
     docs_url="/",
+    lifespan=lifespan,
 )
-app.state.limiter = limiter
-setup_middlewares(app)
 
-load_dotenv()
+app.state.limiter = limiter
+app.add_middleware(PhantomTokenMiddleware)
+app.add_middleware(RequestIdMiddleware)
+app.add_middleware(LoggingMiddleware)
+
+origins = ["*",]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,  # which origins can access
+    allow_credentials=True,  # allow cookies/auth headers
+    allow_methods=["*"],  # GET, POST, PUT, etc.
+    allow_headers=["*"],  # allow custom headers
+)
+
 
 # --- VERSION 1 SETUP ---
 v1_router = APIRouter(prefix="/v1")

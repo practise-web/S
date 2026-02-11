@@ -66,7 +66,6 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     volumes:
-      # Map current directory on host to /app in container
       - ./backend:/app
     depends_on:
       postgres:
@@ -83,6 +82,7 @@ services:
     environment:
       NVIDIA_VISIBLE_DEVICES: all
       NVIDIA_DRIVER_CAPABILITIES: compute,utility
+      REDIS_URL: redis://backend:${REDIS_BACKEND_PASSWORD}@redis:6379/0
 
     networks:
       - app-network
@@ -144,10 +144,21 @@ services:
     networks:
       - app-network
 
+  redis:
+    image: redis:alpine
+    container_name: redis
+    command: redis-server --appendonly yes --aclfile /usr/local/etc/redis/redis.acl  # Enable persistence and uses the acl file
+    volumes:
+      - redis_data:/data
+      - ./redis.acl:/usr/local/etc/redis/redis.acl
+    networks:
+      - app-network
+
 volumes:
   postgres_data:
     name: keycloak_postgres_data
   data-minio:
+  redis_data:
 
 networks:
   app-network:

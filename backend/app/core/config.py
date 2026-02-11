@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings
+from pydantic import RedisDsn, Field
 import os
 
 
@@ -33,5 +34,11 @@ class KeycloakSettings(BaseSettings):
             return f"{self.KEYCLOAK_URL}/admin/realms/{self.KEYCLOAK_REALM}/users/{user_id}"
         return f"{self.KEYCLOAK_URL}/admin/realms/{self.KEYCLOAK_REALM}/users"
 
+class RedisSettings(BaseSettings):
+    redis_url: RedisDsn = Field(default="redis://localhost:6379/0", alias="REDIS_URL")
+    class Config:
+        env_file = ".env"
+        env_file_encoding = "utf-8"
 
 kcsettings = KeycloakSettings()
+redis_settings = RedisSettings()

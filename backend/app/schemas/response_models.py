@@ -12,22 +12,8 @@ class LoginSuccess(BaseModel):
         extra = "allow"
         json_schema_extra = {
             "example": {
-                "access_token": "**********",
-                "expires_in": 3600,
-                "refresh_token": "**********",
-                "refresh_expires_in": 7200,
-                "token_type": "Bearer",
-            }
-        }
-
-
-class LoginError(BaseModel):
-    message: str
-
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "message": "Example error message during login",
+                "message": "Login successful",
+                "session_id": "************-****-****-****-************"
             }
         }
 
@@ -41,16 +27,5 @@ class SignupSuccess(BaseModel):
             "example": {
                 "message": "User registered successfully",
                 "user_id": "**********",
-            }
-        }
-
-
-class SignupError(BaseModel):
-    message: str
-
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "message": "Example error message during signup",
             }
         }

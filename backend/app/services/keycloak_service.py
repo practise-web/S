@@ -1,4 +1,4 @@
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, Header
 from jose import jwt
 from jose.exceptions import JWTError, ExpiredSignatureError
 from app.core.config import kcsettings
@@ -151,6 +151,22 @@ class KeycloakAdmin:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Failed to update email: {str(e)}",
+            )
+    
+    async def get_current_user(self, authorization: str = Header(...)):
+        """Extract and verify Bearer token"""
+        if not authorization.startswith("Bearer "):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing Bearer token"
+            )
+        try:
+            token = authorization.split(" ")[1]
+            payload = await kc_admin.verify_token(token)
+            return payload
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=f"Token verification failed: {str(e)}",
             )
 
 
