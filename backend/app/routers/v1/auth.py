@@ -35,9 +35,8 @@ BASE_HOSTNAME = os.environ.get("BASE_HOSTNAME")
 async def login(input_data: UserLogin, request: Request):
     email = input_data.email
     password = input_data.password
-
     req_id = getattr(request.state, "request_id", "-")
-    logger.info(f"[{req_id}] Login attempt for email: {email}")
+    logger.info(f"[{req_id}] Login attempt")
 
     data = {
         "client_id": kcsettings.KEYCLOAK_CLIENT_ID,
@@ -56,13 +55,13 @@ async def login(input_data: UserLogin, request: Request):
         )
 
     if response.status_code != 200:
-        logger.error(f"[{req_id}] Failed login for email {email}: {response.text}")
+        logger.error(f"[{req_id}] Failed login: {response.text}")
         return JSONResponse(
             status_code=status.HTTP_401_UNAUTHORIZED,
             content={"detail": "Invalid email or password"},
         )
 
-    logger.info(f"[{req_id}] Successful login for email: {email}")
+    logger.info(f"[{req_id}] Successful login")
 
     # Store session data in Redis with the phantom token as the key
     tokens = response.json()
@@ -115,7 +114,7 @@ async def signup(input_data: UserCreate, request: Request):
     password = input_data.password
 
     req_id = getattr(request.state, "request_id", "-")
-    logger.info(f"[{req_id}] Signup attempt for username: {username}, email: {email}")
+    logger.info(f"[{req_id}] Signup attempt for username: {username}")
 
     try:
         token = await kc_admin.get_admin_token()
@@ -287,7 +286,7 @@ async def logout_all_devices(request: Request):
 async def request_password_reset(password_reset_request: PasswordResetRequest, request: Request):
     req_id = getattr(request.state, "request_id", "-")
     email = password_reset_request.email
-    logger.info(f"[{req_id}] Password reset request for email: {email}")
+    logger.info(f"[{req_id}] Password reset request recieved")
     try:
         token = await kc_admin.get_admin_token()
         user_id = await kc_admin.get_user_id_by_email(email, token)
@@ -307,7 +306,7 @@ async def request_password_reset(password_reset_request: PasswordResetRequest, r
             content={"message": "Password reset email sent"},
         )
     except Exception as e:
-        logger.error(f"[{req_id}] Error during password reset request for {email}: {e}")
+        logger.error(f"[{req_id}] Error during password reset request: {e}")
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"message": "Failed to request password reset"},
