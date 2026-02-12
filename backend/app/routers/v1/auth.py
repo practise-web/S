@@ -85,7 +85,6 @@ async def login(input_data: UserLogin, request: Request):
 
     final_response = JSONResponse(content={
         "message": "Login successful",
-        "session_id": phantom_token
     })
 
     final_response.set_cookie(
@@ -200,7 +199,7 @@ async def signup(input_data: UserCreate, request: Request):
 )
 async def logout(request: Request):
     req_id = getattr(request.state, "request_id", "-")
-    session_id = request.cookies.get("session_id")
+    session_id = getattr(request.state, "session_id", None)
     logger.info(f"[{req_id}] Attempting logout")
     if not session_id:
         return JSONResponse(status_code=200, content={"message": "Already logged out"})
@@ -242,6 +241,37 @@ async def logout(request: Request):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"message": "Failed to logout"},
         )
+
+
+@router.post("/logout-all", 
+             status_code=status.HTTP_200_OK, 
+             tags=["Authentication"], 
+             summary="Logout from all devices", 
+             description="Logs out the user from all devices by invalidating all their sessions."
+             )
+async def logout_all_devices(request: Request):
+    user_id = getattr(request.state, "user_id", None)
+    req_id = getattr(request.state, "request_id", "-")
+    logger.info(f"[{req_id}] Attempting logout all devices for user {user_id}")
+    if not user_id:
+        logger.error(f"[{req_id}] No user ID found in request state during logout all devices")
+        return JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content={"detail": "Not authenticated"})
+
+    user_key = f"user_sessions:{user_id}"
+    all_uuids = await db.redis_client.smembers(user_key)
+    
+    for uuid in all_uuids:
+        logger.info(f"[{req_id}] Deleting session {uuid} for user {user_id}")
+        await db.redis_client.delete(f"session:{uuid}")
+    await db.redis_client.delete(user_key)
+
+    response = JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"message": "Successfully logged out all devices"},
+    )
+    response.delete_cookie("session_id")
+    logger.info(f"[{req_id}] Successfully logged out all devices for user {user_id}")
+    return response
 
 
 @router.post(

@@ -1,4 +1,5 @@
-from fastapi import HTTPException, status, Header
+from app.schemas.user_schema import UserInternal
+from fastapi import HTTPException, status, Request
 from jose import jwt
 from jose.exceptions import JWTError, ExpiredSignatureError
 from app.core.config import kcsettings
@@ -153,21 +154,16 @@ class KeycloakAdmin:
                 detail=f"Failed to update email: {str(e)}",
             )
     
-    async def get_current_user(self, authorization: str = Header(...)):
-        """Extract and verify Bearer token"""
-        if not authorization.startswith("Bearer "):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing Bearer token"
-            )
-        try:
-            token = authorization.split(" ")[1]
-            payload = await kc_admin.verify_token(token)
-            return payload
-        except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail=f"Token verification failed: {str(e)}",
-            )
+    async def get_current_user(self, request: Request):
+        """
+        Check if the Middleware found a valid session.
+        """
+        user_payload = getattr(request.state, "user", None)
+        if not user_payload:
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Not authenticated")
+        
+        # Convert Dict -> Pydantic Model
+        return UserInternal(**user_payload)
 
 
 kc_admin = KeycloakAdmin()

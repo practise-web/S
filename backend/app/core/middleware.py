@@ -18,13 +18,8 @@ class PhantomTokenMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         # Priority: Check Cookie first
         phantom_token = request.cookies.get("session_id")
-        # If not in cookie, check Authorization header
-        if not phantom_token:
-            auth_header = request.headers.get("Authorization")
-            if auth_header and auth_header.startswith("Bearer "):
-                phantom_token = auth_header.split(" ")[1]
 
-        # We let the route handler decide if it needs auth (returns 401 or 403 later)
+        # We let the route handler decide if it needs auth
         if not phantom_token:
             return await call_next(request)
 
@@ -32,10 +27,13 @@ class PhantomTokenMiddleware(BaseHTTPMiddleware):
             data_json = await db.redis_client.get(f"session:{phantom_token}")
             
             if not data_json:
-                return JSONResponse(
+                resp = JSONResponse(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     content={"detail": "Session expired or revoked"}
                 )
+                resp.delete_cookie("session_id")
+                return resp
+
             session_data = json.loads(data_json)
             session_data = await self.validate_session_data(session_data, phantom_token)
             
@@ -48,10 +46,12 @@ class PhantomTokenMiddleware(BaseHTTPMiddleware):
                 response.delete_cookie("session_id")
                 return response
 
-            # INJECT REAL JWT
-            headers = dict(request.scope["headers"])
-            headers[b"authorization"] = f"Bearer {session_data['access_token']}".encode("latin-1")
-            request.scope["headers"] = list(headers.items())
+            payload = jwt.decode(session_data['access_token'], options={"verify_signature": False})
+            request.state.user = payload
+            request.state.user_id = payload.get("sub")
+            request.state.session_id = phantom_token
+            request.state.access_token = session_data['access_token']
+            request.state.refresh_token = session_data['refresh_token']
 
         except Exception as e:
             print(f"Redis Error: {e}")
