@@ -5,19 +5,22 @@ from app.core.config import kcsettings
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
 from app.core import database as db
+from app.core import network as net
 import json
 import uuid
 import logging
 import time
-import httpx
 import jwt
 
 logger = logging.getLogger("app.core.middleware")
 
 class PhantomTokenMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        # Priority: Check Cookie first
-        phantom_token = request.cookies.get("session_id")
+        auth_header = request.headers.get("Authorization")
+        phantom_token = None
+
+        if auth_header and auth_header.startswith("Bearer "):
+            phantom_token = auth_header.split(" ")[1]
 
         # We let the route handler decide if it needs auth
         if not phantom_token:
@@ -31,7 +34,6 @@ class PhantomTokenMiddleware(BaseHTTPMiddleware):
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     content={"detail": "Session expired or revoked"}
                 )
-                resp.delete_cookie("session_id")
                 return resp
 
             session_data = json.loads(data_json)
@@ -43,7 +45,6 @@ class PhantomTokenMiddleware(BaseHTTPMiddleware):
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     content={"detail": "Session expired fully"}
                 )
-                response.delete_cookie("session_id")
                 return response
 
             payload = jwt.decode(session_data['access_token'], options={"verify_signature": False})
@@ -92,8 +93,7 @@ class PhantomTokenMiddleware(BaseHTTPMiddleware):
             "grant_type": "refresh_token",
             "refresh_token": refresh_token
         }
-        async with httpx.AsyncClient() as client:
-            return await client.post(kcsettings.KEYCLOAK_TOKEN_URL, data=payload)
+        return await net.client.post(kcsettings.KEYCLOAK_TOKEN_URL, data=payload)
 
 class RequestIdMiddleware(BaseHTTPMiddleware):
     def __init__(self, app: ASGIApp):

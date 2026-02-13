@@ -3,6 +3,7 @@ from fastapi import HTTPException, status, Request
 from jose import jwt
 from jose.exceptions import JWTError, ExpiredSignatureError
 from app.core.config import kcsettings
+from app.core import network as net
 import httpx
 
 
@@ -14,8 +15,7 @@ class KeycloakAdmin:
     async def __get_jwks(self):
         if self.JWKS_CACHE:
             return self.JWKS_CACHE
-        async with httpx.AsyncClient() as client:
-            response = await client.get(kcsettings.KEYCLOAK_JWK_URL)
+        response = await net.client.get(kcsettings.KEYCLOAK_JWK_URL)
         self.JWKS_CACHE = response.json()
         return self.JWKS_CACHE
 
@@ -69,10 +69,9 @@ class KeycloakAdmin:
             "grant_type": "password",
         }
         headers = {"Content-Type": "application/x-www-form-urlencoded"}
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                kcsettings.KEYCLOAK_TOKEN_URL, data=data, headers=headers
-            )
+        response = await net.client.post(
+            kcsettings.KEYCLOAK_TOKEN_URL, data=data, headers=headers
+        )
         if response.status_code != 200:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -91,14 +90,13 @@ class KeycloakAdmin:
         if redirect_uri:
             params["redirectUri"] = redirect_uri
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.put(
-                    kcsettings.KEYCLOAK_EMAIL_ACTIONS_URL(user_id),
-                    json=[action],  # List of actions to trigger
-                    headers={"Authorization": f"Bearer {token}"},
-                    params=params,
-                )
-                response.raise_for_status()
+            response = await net.client.put(
+                kcsettings.KEYCLOAK_EMAIL_ACTIONS_URL(user_id),
+                json=[action],  # List of actions to trigger
+                headers={"Authorization": f"Bearer {token}"},
+                params=params,
+            )
+            response.raise_for_status()
         except httpx.HTTPError as e:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -107,16 +105,15 @@ class KeycloakAdmin:
 
     async def get_user_id_by_email(self, email: str, token: str):
         try:
-            async with httpx.AsyncClient() as client:
-                resp = await client.get(
-                    kcsettings.KEYCLOAK_USERS_URL(),
-                    params={"email": email, "exact": True},
-                    headers={"Authorization": f"Bearer {token}"},
-                )
-                users = resp.json()
-                if not users:
-                    return None
-                return users[0]["id"]
+            resp = await net.client.get(
+                kcsettings.KEYCLOAK_USERS_URL(),
+                params={"email": email, "exact": True},
+                headers={"Authorization": f"Bearer {token}"},
+            )
+            users = resp.json()
+            if not users:
+                return None
+            return users[0]["id"]
         except httpx.HTTPError as e:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -127,12 +124,11 @@ class KeycloakAdmin:
     async def reset_password(self, user_id: str, new_password: str, token: str):
         payload = {"type": "password", "value": new_password, "temporary": False}
         try:
-            async with httpx.AsyncClient() as client:
-                await client.put(
-                    kcsettings.KEYCLOAK_RESET_PASSWORD_URL(user_id),
-                    json=payload,
-                    headers={"Authorization": f"Bearer {token}"},
-                )
+            await net.client.put(
+                kcsettings.KEYCLOAK_RESET_PASSWORD_URL(user_id),
+                json=payload,
+                headers={"Authorization": f"Bearer {token}"},
+            )
         except httpx.HTTPError as e:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -142,12 +138,11 @@ class KeycloakAdmin:
     async def update_email(self, user_id: str, new_email: str, token: str):
         payload = {"email": new_email, "emailVerified": True}
         try:
-            async with httpx.AsyncClient() as client:
-                await client.put(
-                    kcsettings.KEYCLOAK_USERS_URL(user_id),
-                    json=payload,
-                    headers={"Authorization": f"Bearer {token}"},
-                )
+            await net.client.put(
+                kcsettings.KEYCLOAK_USERS_URL(user_id),
+                json=payload,
+                headers={"Authorization": f"Bearer {token}"},
+            )
         except httpx.HTTPError as e:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

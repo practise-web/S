@@ -2,11 +2,8 @@ from pydantic import BaseModel
 
 
 class LoginSuccess(BaseModel):
-    access_token: str
-    expires_in: int
-    refresh_token: str
-    refresh_expires_in: int
-    token_type: str
+    message: str
+    session_id: str
 
     class Config:
         extra = "allow"

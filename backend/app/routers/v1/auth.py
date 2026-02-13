@@ -10,6 +10,7 @@ from app.services.keycloak_service import kc_admin
 from app.core.rate_limiter import limiter
 from app.core.config import kcsettings
 from app.core import database as db
+from app.core import network as net
 import logging
 import httpx
 import os
@@ -49,10 +50,9 @@ async def login(input_data: UserLogin, request: Request):
 
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
 
-    async with httpx.AsyncClient() as client:
-        response = await client.post(
-            kcsettings.KEYCLOAK_TOKEN_URL, data=data, headers=headers
-        )
+    response = await net.client.post(
+        kcsettings.KEYCLOAK_TOKEN_URL, data=data, headers=headers
+    )
 
     if response.status_code != 200:
         logger.error(f"[{req_id}] Failed login: {response.text}")
@@ -82,19 +82,10 @@ async def login(input_data: UserLogin, request: Request):
     await db.redis_client.sadd(f"user_sessions:{user_id}", phantom_token)
     await db.redis_client.expire(f"user_sessions:{user_id}", 2592000)
 
-    final_response = JSONResponse(content={
-        "message": "Login successful",
-    })
-
-    final_response.set_cookie(
-        key="session_id", 
-        value=phantom_token, 
-        httponly=True, 
-        secure=True, 
-        samesite="lax",
-        max_age=refresh_ttl
-    )
-    return final_response
+    return JSONResponse(content={
+            "message": "Login successful",
+            "session_id": phantom_token
+        })
 
 
 @router.post(
@@ -135,12 +126,12 @@ async def signup(input_data: UserCreate, request: Request):
             "Content-Type": "application/json",
         }
 
-        async with httpx.AsyncClient() as client:
-            create_user_res = await client.post(
-                kcsettings.KEYCLOAK_USERS_URL(),
-                json=user_data,
-                headers=headers,
-            )
+
+        create_user_res = await net.client.post(
+            kcsettings.KEYCLOAK_USERS_URL(),
+            json=user_data,
+            headers=headers,
+        )
 
         if create_user_res.status_code not in [201, 204]:
             logger.error(
@@ -204,9 +195,7 @@ async def logout(request: Request):
         return JSONResponse(status_code=200, content={"message": "Already logged out"})
     raw_data = await db.redis_client.get(f"session:{session_id}")
     if not raw_data:
-        response = JSONResponse(status_code=200, content={"message": "Already logged out"})
-        response.delete_cookie("session_id")
-        return response
+        return JSONResponse(status_code=200, content={"message": "Already logged out"})
     
     refresh_token = json.loads(raw_data)["refresh_token"]
 
@@ -218,10 +207,9 @@ async def logout(request: Request):
 
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                kcsettings.KEYCLOAK_LOGOUT_URL, data=data, headers=headers
-            )
+        response = await net.client.post(
+            kcsettings.KEYCLOAK_LOGOUT_URL, data=data, headers=headers
+        )
 
         if response.status_code != 204:
             return JSONResponse(
@@ -231,9 +219,7 @@ async def logout(request: Request):
 
         await db.redis_client.delete(f"session:{session_id}")
 
-        response = JSONResponse(status_code=status.HTTP_200_OK, content={"message": "Successfully logged out"})
-        response.delete_cookie("session_id")
-        return response
+        return JSONResponse(status_code=status.HTTP_200_OK, content={"message": "Successfully logged out"})
     except Exception as e:
         logger.error(f"[{req_id}] Error during logout: {e}")
         return JSONResponse(
@@ -264,13 +250,11 @@ async def logout_all_devices(request: Request):
         await db.redis_client.delete(f"session:{uuid}")
     await db.redis_client.delete(user_key)
 
-    response = JSONResponse(
-        status_code=status.HTTP_200_OK,
-        content={"message": "Successfully logged out all devices"},
-    )
-    response.delete_cookie("session_id")
     logger.info(f"[{req_id}] Successfully logged out all devices for user {user_id}")
-    return response
+    return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={"message": "Successfully logged out all devices"},
+        )
 
 
 @router.post(

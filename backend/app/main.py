@@ -4,11 +4,13 @@ from app.core.middleware import PhantomTokenMiddleware, RequestIdMiddleware, Log
 from app.core.logger import configure_logging, LogLevels
 from app.core.rate_limiter import limiter
 from app.core.config import redis_settings
+from app.core import network as net
 from contextlib import asynccontextmanager
 from starlette.middleware.cors import CORSMiddleware
 from app.core import database as db
 import redis.asyncio as redis
 import logging
+import httpx
 from dotenv import load_dotenv
 
 
@@ -20,16 +22,23 @@ async def lifespan(app: FastAPI):
     logger.info("Application startup: Initializing resources")
     load_dotenv()
     # Initialize resources here (e.g., database connections, caches)
-    global redis_client
     logger.info(f"Connecting to Redis at {redis_settings.redis_url}")
     db.redis_client = redis.from_url(str(redis_settings.redis_url), decode_responses=True)
+    logger.info("Redis connection established")
+    net.client = httpx.AsyncClient(timeout=30.0)
+    logger.info("Global HTTP Client initialized with 30s timeout.")
+    logger.info("Resources initialized successfully")
 
     yield
 
+    # Clean up resources here (e.g., close database connections, flush caches)
     logger.info("Application shutdown: Cleaning up resources")
     await db.redis_client.close()
     logger.info("Redis connection closed")
-    # Clean up resources here (e.g., close database connections, flush caches)
+    if net.client:
+        await net.client.aclose()
+        logger.info("HTTP client closed")
+    logger.info("Resources cleaned up successfully")
 
 app = FastAPI(
     title="ScholarMind",
@@ -45,7 +54,13 @@ app.add_middleware(PhantomTokenMiddleware)
 app.add_middleware(RequestIdMiddleware)
 app.add_middleware(LoggingMiddleware)
 
-origins = ["*",]
+origins = [
+    "http://localhost:3000",      # Common for React/Next.js
+    "http://localhost:5173",      # Common for Vite/Vue
+    "http://127.0.0.1:5500",      # Common for VS Code Live Server
+    "https://accommodative-dusti-subpetiolate.ngrok-free.app",
+    "null" 
+]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,  # which origins can access
