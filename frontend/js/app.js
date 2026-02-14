@@ -1,50 +1,56 @@
 // ============================================
-// API CONFIGURATION
-// ============================================
-const API_BASE_URL = 'https://accommodative-dusti-subpetiolate.ngrok-free.dev/api';
+        // API CONFIGURATION
+        // ============================================
+        const API_BASE_URL = 'https://accommodative-dusti-subpetiolate.ngrok-free.dev/api';
 
-// ============================================
-// TOAST NOTIFICATION SYSTEM (XSS-SAFE)
-// ============================================
-function showToast(message, type = 'info', title = '') {
-    const container = document.getElementById('toastContainer');
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    
-    if (!title) {
-        const titles = { success: 'Success', error: 'Error', info: 'Info', warning: 'Warning' };
-        title = titles[type] || 'Notification';
-    }
-    
-    const icons = {
-        success: '<svg class="toast-icon success" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>',
-        error: '<svg class="toast-icon error" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>',
-        info: '<svg class="toast-icon info" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>',
-        warning: '<svg class="toast-icon warning" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>'
-    };
-    
-    const iconWrapper = document.createElement('div');
-    iconWrapper.innerHTML = icons[type];
-    const contentDiv = document.createElement('div');
-    contentDiv.className = 'toast-content';
-    const titleDiv = document.createElement('div');
-    titleDiv.className = 'toast-title';
-    titleDiv.textContent = title;
-    const messageDiv = document.createElement('div');
-    messageDiv.className = 'toast-message';
-    messageDiv.textContent = message;
-    contentDiv.appendChild(titleDiv);
-    contentDiv.appendChild(messageDiv);
-    const closeBtn = document.createElement('button');
-    closeBtn.className = 'toast-close';
-    closeBtn.innerHTML = '<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>';
-    closeBtn.onclick = () => toast.remove();
-    toast.appendChild(iconWrapper.firstElementChild);
-    toast.appendChild(contentDiv);
-    toast.appendChild(closeBtn);
-    container.appendChild(toast);
-    setTimeout(() => { toast.classList.add('removing'); setTimeout(() => toast.remove(), 300); }, 5000);
-}
+        // ============================================
+        // TOAST NOTIFICATION SYSTEM
+        // ============================================
+        function showToast(message, type = 'info', title = '') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            // Set default titles based on type
+            if (!title) {
+                const titles = {
+                    success: 'Success',
+                    error: 'Error',
+                    info: 'Info',
+                    warning: 'Warning'
+                };
+                title = titles[type] || 'Notification';
+            }
+            
+            // Icons for each type
+            const icons = {
+                success: '<svg class="toast-icon success" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>',
+                error: '<svg class="toast-icon error" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>',
+                info: '<svg class="toast-icon info" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>',
+                warning: '<svg class="toast-icon warning" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>'
+            };
+            
+            toast.textContent = `
+                ${icons[type]}
+                <div class="toast-content">
+                    <div class="toast-title">${title}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+                <button class="toast-close" onclick="this.parentElement.remove()">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            `;
+            
+            container.appendChild(toast);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                toast.classList.add('removing');
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+        }
 
         // ============================================
         // SESSION MANAGEMENT
@@ -411,47 +417,37 @@ function showToast(message, type = 'info', title = '') {
         // EMAIL VERIFICATION
         // ============================================
         function showEmailVerificationMessage(email) {
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay active';
-    const modalContent = document.createElement('div');
-    modalContent.className = 'modal-content';
-    modalContent.style.cssText = 'text-align: center; max-width: 500px;';
-    const closeBtn = document.createElement('button');
-    closeBtn.className = 'modal-close';
-    closeBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
-    closeBtn.onclick = () => { modal.remove(); document.body.classList.remove('modal-open'); [document.querySelector('.hamburger-menu'), document.querySelector('.container'), document.querySelector('.sidebar')].forEach(el => el && el.classList.remove('blur')); };
-    const icon = document.createElement('div');
-    icon.style.cssText = 'font-size: 60px; margin-bottom: 20px;';
-    icon.textContent = '📧';
-    const title = document.createElement('h3');
-    title.style.cssText = 'font-size: 24px; font-weight: 700; color: #333; margin-bottom: 12px;';
-    title.textContent = 'Check Your Email';
-    const message = document.createElement('p');
-    message.style.cssText = 'font-size: 15px; color: #666; margin-bottom: 20px; line-height: 1.6;';
-    message.textContent = 'Please check your inbox at ';
-    const emailStrong = document.createElement('strong');
-    emailStrong.textContent = email;
-    message.appendChild(emailStrong);
-    message.appendChild(document.createTextNode(' and click the verification link to activate your account.'));
-    const resendText = document.createElement('p');
-    resendText.style.cssText = 'font-size: 14px; color: #999;';
-    resendText.textContent = "Didn't receive the email? ";
-    const resendLink = document.createElement('a');
-    resendLink.href = '#';
-    resendLink.style.cssText = 'color: #71038F; text-decoration: none; font-weight: 600;';
-    resendLink.textContent = 'resend verification email';
-    resendLink.onclick = (e) => { e.preventDefault(); resendVerificationEmail(email); };
-    resendText.appendChild(resendLink);
-    modalContent.appendChild(closeBtn);
-    modalContent.appendChild(icon);
-    modalContent.appendChild(title);
-    modalContent.appendChild(message);
-    modalContent.appendChild(resendText);
-    modal.appendChild(modalContent);
-    document.body.appendChild(modal);
-    document.body.classList.add('modal-open');
-    [document.querySelector('.hamburger-menu'), document.querySelector('.container'), document.querySelector('.sidebar')].forEach(el => el && el.classList.add('blur'));
-}
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay active';
+            modal.textContent = `
+                <div class="modal-content" style="text-align: center; max-width: 500px;">
+                    <button class="modal-close" onclick="this.parentElement.parentElement.remove(); document.body.classList.remove('modal-open'); document.querySelector('.hamburger-menu').classList.remove('blur'); document.querySelector('.container').classList.remove('blur'); document.querySelector('.sidebar').classList.remove('blur');">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                    
+                    <div style="margin-bottom: 25px;">
+                        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" style="margin: 0 auto;">
+                            <circle cx="12" cy="12" r="10" stroke="url(#grad1)" stroke-width="2"/>
+                            <path d="M12 8v4M12 16h.01" stroke="url(#grad1)" stroke-width="2" stroke-linecap="round"/>
+                            <defs>
+                                <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#71038F;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#0033FF;stop-opacity:1" />
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+                    
+                    <h2 style="font-size: 28px; font-weight: 700; background: linear-gradient(135deg, #71038F 0%, #0033FF 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 15px;">
+                        Verify Your Email
+                    </h2>
+                    
+                    <p style="font-size: 15px; color: #666; margin-bottom: 25px; line-height: 1.6;">
+                        We've sent a verification link to<br>
+                        <strong style="color: #333;">${email}</strong>
                     </p>
                     
                     <p style="font-size: 14px; color: #999; margin-bottom: 30px;">
@@ -554,31 +550,19 @@ function showToast(message, type = 'info', title = '') {
         // UI UPDATES
         // ============================================
         function updateUIForLoggedInUser() {
-    const user = Auth.getUser();
-    const authButtons = document.querySelector('.auth-buttons');
-    const mainHeading = document.getElementById('mainHeading');
-    if (authButtons && user) {
-        authButtons.textContent = '';
-        const welcomeSpan = document.createElement('span');
-        welcomeSpan.style.cssText = 'margin-right: 15px; color: #333; font-weight: 500;';
-        welcomeSpan.textContent = 'Welcome, User';
-        authButtons.appendChild(welcomeSpan);
-    }
-    if (mainHeading && user) {
-        mainHeading.textContent = '';
-        mainHeading.appendChild(document.createTextNode('Welcome, User!'));
-        mainHeading.appendChild(document.createElement('br'));
-        mainHeading.appendChild(document.createTextNode('What are you researching today?'));
-    }
-    const profileName = document.querySelector('.profile-name');
-    const profileEmail = document.querySelector('.profile-email');
-    if (profileName && user) { profileName.textContent = 'User'; }
-    if (profileEmail && user) { profileEmail.textContent = user.email || ''; }
-}
+            const user = Auth.getUser();
+            const authButtons = document.querySelector('.auth-buttons');
+            const mainHeading = document.getElementById('mainHeading');
+            
+            if (authButtons && user) {
+                authButtons.textContent = `
+                    <span style="margin-right: 15px; color: #333; font-weight: 500;">Welcome, User</span>
+                `;
+            }
             
             // Update main heading to show static "User"
             if (mainHeading && user) {
-                mainHeading.innerHTML = `Welcome, User!<br>What are you researching today?`;
+                mainHeading.TEXT_NODE = `Welcome, User!<br>What are you researching today?`;
             }
             
             // Update sidebar profile with static "User"
