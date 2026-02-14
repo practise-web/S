@@ -30,7 +30,7 @@
                 warning: '<svg class="toast-icon warning" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>'
             };
             
-            toast.textContent = `
+            toast.innerHTML = `
                 ${icons[type]}
                 <div class="toast-content">
                     <div class="toast-title">${title}</div>
@@ -419,7 +419,7 @@
         function showEmailVerificationMessage(email) {
             const modal = document.createElement('div');
             modal.className = 'modal-overlay active';
-            modal.textContent = `
+            modal.innerHTML = `
                 <div class="modal-content" style="text-align: center; max-width: 500px;">
                     <button class="modal-close" onclick="this.parentElement.parentElement.remove(); document.body.classList.remove('modal-open'); document.querySelector('.hamburger-menu').classList.remove('blur'); document.querySelector('.container').classList.remove('blur'); document.querySelector('.sidebar').classList.remove('blur');">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
@@ -555,7 +555,7 @@
             const mainHeading = document.getElementById('mainHeading');
             
             if (authButtons && user) {
-                authButtons.textContent = `
+                authButtons.innerHTML = `
                     <span style="margin-right: 15px; color: #333; font-weight: 500;">Welcome, User</span>
                 `;
             }
