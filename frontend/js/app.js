@@ -562,7 +562,10 @@
             
             // Update main heading to show static "User"
             if (mainHeading && user) {
-                mainHeading.TEXT_NODE = `Welcome, User!<br>What are you researching today?`;
+                mainHeading.textContent = '';
+                mainHeading.appendChild(document.createTextNode('Welcome, User!'));
+                mainHeading.appendChild(document.createElement('br'));
+                mainHeading.appendChild(document.createTextNode('What are you researching today?'));
             }
             
             // Update sidebar profile with static "User"
