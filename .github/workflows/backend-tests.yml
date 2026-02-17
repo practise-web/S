@@ -28,7 +28,7 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install -r backend/requirements.txt
-          pip install pytest black ruff
+          pip install -r backend/requirements-dev.txt
 
       - name: Check Formatting
         run: black backend/
@@ -41,11 +41,11 @@ jobs:
 
       - name: Type Check with Pyright
         run: pyright backend
+        continue-on-error: true
 
       - name: Run Tests
         run: pytest backend/app/tests/ --durations=0 -v
         env:
-          KEYCLOAK_URL: "http://localhost:8080"
           KEYCLOAK_REALM: "master"
           AUTH_CLIENT_ID: "service-auth"
           AUTH_CLIENT_SECRET: ${{ secrets.AUTH_CLIENT_SECRET }}

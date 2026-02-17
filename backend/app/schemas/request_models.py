@@ -24,3 +24,10 @@ class UserLogin(BaseModel):
         json_schema_extra = {
             "example": {"email": "user@mail.com", "password": "**********"}
         }
+
+
+class PasswordResetRequest(BaseModel):
+    email: EmailStr
+
+    class Config:
+        json_schema_extra = {"example": {"email": "user@mail.com"}}

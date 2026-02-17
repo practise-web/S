@@ -16,6 +16,7 @@ dependencies = [
     "python-dotenv>=1.1.1",
     "python-jose>=3.5.0",
     "python-multipart>=0.0.20",
+    "redis>=7.1.1",
     "slowapi>=0.1.9",
     "uvicorn>=0.37.0",
     "werkzeug>=3.1.4",

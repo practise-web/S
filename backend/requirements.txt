@@ -14,6 +14,7 @@ google-cloud-storage==3.7.0
 python-jose[cryptography]==3.3.0
 pyjwt==2.10.1
 cryptography==46.0.3
+redis
 
 # --- Data Validation & Logic ---
 pydantic==2.12.5
