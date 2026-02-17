@@ -42,6 +42,7 @@ services:
       KEYCLOAK_ADMIN: ${KEYCLOAK_USERNAME}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_PASSWORD}
       KC_HOSTNAME: ${BASE_HOSTNAME}/kc
+      KC_HOSTNAME_STRICT_BACKCHANNEL: "false"
       KC_HTTP_RELATIVE_PATH: /kc
       KC_PROXY: edge
       KC_HOSTNAME_STRICT: "false"
@@ -56,6 +57,12 @@ services:
         condition: service_healthy
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080; printf 'GET /health/ready HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n' >&3; if [ $? -eq 0 ]; then echo 'Healthcheck Successful'; exit 0; else echo 'Healthcheck Failed'; exit 1; fi;"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
 
   backend:
     container_name: backend
@@ -66,12 +73,15 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     volumes:
-      # Map current directory on host to /app in container
       - ./backend:/app
     depends_on:
       postgres:
         condition: service_healthy
       keycloak:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      minio:
         condition: service_started
     deploy:
       resources:
@@ -83,6 +93,7 @@ services:
     environment:
       NVIDIA_VISIBLE_DEVICES: all
       NVIDIA_DRIVER_CAPABILITIES: compute,utility
+      REDIS_URL: redis://backend:${REDIS_BACKEND_PASSWORD}@redis:6379/0
 
     networks:
       - app-network
@@ -144,10 +155,21 @@ services:
     networks:
       - app-network
 
+  redis:
+    image: redis:alpine
+    container_name: redis
+    command: redis-server --appendonly yes --aclfile /usr/local/etc/redis/redis.acl  # Enable persistence and uses the acl file
+    volumes:
+      - redis_data:/data
+      - ./redis.acl:/usr/local/etc/redis/redis.acl
+    networks:
+      - app-network
+
 volumes:
   postgres_data:
     name: keycloak_postgres_data
   data-minio:
+  redis_data:
 
 networks:
   app-network:

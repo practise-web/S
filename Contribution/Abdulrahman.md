@@ -36,5 +36,8 @@ General role: Code Maintainer, Backend Lead
 # Abdulrahman (Feb 2026)
 
 ## Backend
-- Added additional API for Authentications such as: Logout, Password Update, Token Refresh (PR #55)
-- Fixed a big secret exposure with gitleaks
+- Engineered a secure authentication suite, implementing Token Refresh, Password Update, and Logout functionalities to ensure industry-standard user session management. (PR #55)
+- Established rigorous security protocols by integrating automated secret scanning, successfully identifying and mitigating high-risk credential exposures.
+- Implemented Phantom Token Auth Pattern, decoupling public-facing opaque tokens from internal JWTs to enable instantaneous "Revoke All Sessions" capabilities and enhance API security. (PR #62)
+- Designed and normalized the relational database schema (ERD) to optimize data integrity and query performance for complex research metadata.
+- Drove the technical design and architectural decisions for ScholarMind.

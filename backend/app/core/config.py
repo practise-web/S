@@ -1,14 +1,20 @@
-from pydantic_settings import BaseSettings
-import os
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import RedisDsn, Field
 
 
 class KeycloakSettings(BaseSettings):
-    KEYCLOAK_URL: str = os.environ.get("KEYCLOAK_URL")
-    KEYCLOAK_REALM: str = os.environ.get("KEYCLOAK_REALM")
-    KEYCLOAK_CLIENT_ID: str = os.environ.get("AUTH_CLIENT_ID")
-    KEYCLOAK_CLIENT_SECRET: str = os.environ.get("AUTH_CLIENT_SECRET")
-    KEYCLOAK_USERNAME: str = os.environ.get("KEYCLOAK_USERNAME")
-    KEYCLOAK_PASSWORD: str = os.environ.get("KEYCLOAK_PASSWORD")
+    KEYCLOAK_URL: str
+    KEYCLOAK_REALM: str
+    KEYCLOAK_CLIENT_ID: str = Field(validation_alias="AUTH_CLIENT_ID")
+    KEYCLOAK_CLIENT_SECRET: str = Field(validation_alias="AUTH_CLIENT_SECRET")
+    KEYCLOAK_USERNAME: str
+    KEYCLOAK_PASSWORD: str
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",  # Good practice: ignores extra env vars unrelated to this class
+    )
 
     @property
     def KEYCLOAK_TOKEN_URL(self):
@@ -34,4 +40,11 @@ class KeycloakSettings(BaseSettings):
         return f"{self.KEYCLOAK_URL}/admin/realms/{self.KEYCLOAK_REALM}/users"
 
 
-kcsettings = KeycloakSettings()
+class RedisSettings(BaseSettings):
+    redis_url: RedisDsn = Field(alias="REDIS_URL")
+
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+
+
+kcsettings = KeycloakSettings()  # type: ignore
+redis_settings = RedisSettings()  # type: ignore

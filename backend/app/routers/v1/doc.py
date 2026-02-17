@@ -1,13 +1,7 @@
-from fastapi import APIRouter, status, HTTPException, Depends, Request, File, UploadFile
-from app.services.docling_service import parse_pdf
-from app.core.security import get_current_user
+from fastapi import APIRouter, status, Depends, Request, File, UploadFile
+from app.services.keycloak_service import kc_admin
 from app.schemas.doc_schema import ParseRequest
-from fastapi.responses import JSONResponse
-from fastapi.concurrency import run_in_threadpool
 import logging
-import shutil
-import tempfile
-import os
 
 logger = logging.getLogger("app.routers.doc")
 router = APIRouter(prefix="/doc", tags=["Documents"])
@@ -23,25 +17,14 @@ router = APIRouter(prefix="/doc", tags=["Documents"])
                 """,
 )
 async def parse_url(
-    request: Request, doc: ParseRequest, user=Depends(get_current_user)
+    request: Request, doc: ParseRequest, user=Depends(kc_admin.get_current_user)
 ):
     req_id = getattr(request.state, "request_id", "-")
     logger.info(
-        f"[{req_id}] Starting to parse document: {doc.path} for user: {user.get('sub')}"
+        f"Received request to parse document {doc.url} for user {user.get('sub')}",
+        extra={"request_id": req_id},
     )
-    try:
-        await run_in_threadpool(parse_pdf, doc.path)
-        logger.info(f"[{req_id}] Successfully parsed document: {doc.path}")
-        return JSONResponse(
-            status_code=status.HTTP_200_OK,
-            content={"message": "Doc parsed successfully"},
-        )
-    except Exception as e:
-        logger.error(f"[{req_id}] Error parsing document: {doc.path} - {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error parsing Doc: {str(e)}",
-        )
+    return {"detail": f"Received request to parse documents for user {user.get('sub')}"}
 
 
 @router.post(
@@ -54,35 +37,15 @@ async def parse_url(
                     """,
 )
 async def parse_upload(
-    request: Request, file: UploadFile = File(...), user=Depends(get_current_user)
+    request: Request,
+    file: UploadFile = File(...),
+    user=Depends(kc_admin.get_current_user),
 ):
     req_id = getattr(request.state, "request_id", "-")
-
-    if file.content_type != "application/pdf":
-        raise HTTPException(400, "Only PDF files are allowed")
-
     logger.info(
-        f"[{req_id}] Starting to upload document: {file.filename} for user: {user.get('sub')}"
+        f"Received request to upload document {file.filename} for user {user.get('sub')}",
+        extra={"request_id": req_id},
     )
-
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
-        shutil.copyfileobj(file.file, tmp)
-        tmp_path = tmp.name
-    try:
-        await run_in_threadpool(parse_pdf, tmp_path)
-        logger.info(
-            f"[{req_id}] Successfully uploaded and parsed document: {file.filename}"
-        )
-        return JSONResponse(
-            status_code=status.HTTP_200_OK,
-            content={"message": "File uploaded and parsed successfully"},
-        )
-    except Exception as e:
-        logger.error(f"[{req_id}] Error uploading document: {file.filename} - {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error uploading Doc: {str(e)}",
-        )
-    finally:
-        if os.path.exists(tmp_path):
-            os.remove(tmp_path)
+    return {
+        "detail": f"Received request to upload document {file.filename} for user {user.get('sub')}"
+    }
