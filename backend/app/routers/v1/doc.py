@@ -20,6 +20,10 @@ async def parse_url(
     request: Request, doc: ParseRequest, user=Depends(kc_admin.get_current_user)
 ):
     req_id = getattr(request.state, "request_id", "-")
+    logger.info(
+        f"Received request to parse document {doc.url} for user {user.get('sub')}",
+        extra={"request_id": req_id},
+    )
     return {"detail": f"Received request to parse documents for user {user.get('sub')}"}
 
 
@@ -38,4 +42,10 @@ async def parse_upload(
     user=Depends(kc_admin.get_current_user),
 ):
     req_id = getattr(request.state, "request_id", "-")
-    return {"detail": f"Received request to upload document {file.filename} for user {user.get('sub')}"}
+    logger.info(
+        f"Received request to upload document {file.filename} for user {user.get('sub')}",
+        extra={"request_id": req_id},
+    )
+    return {
+        "detail": f"Received request to upload document {file.filename} for user {user.get('sub')}"
+    }

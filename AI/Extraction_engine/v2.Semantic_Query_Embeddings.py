@@ -4,59 +4,70 @@
 """
 ScholarMind — Semantic Query Embedding (SPECTER)
 ------------------------------------------------
-This module provides a production-ready function for computing
-semantic embeddings of user queries using the SPECTER model.
 
 Features:
-- Converts queries to vector embeddings
-- Caches results for repeated queries (improves performance)
-- Ready for cosine similarity search in RAG pipelines
+- Uses SPECTER (`allenai/specter`) for stable citation-aware embeddings
+- Normalized embeddings for cosine similarity
+- Cached results for repeated queries
+- Safe input validation
 """
 
 from sentence_transformers import SentenceTransformer
 from functools import lru_cache
-import time
+from typing import Optional
+import numpy as np
 
 # -----------------------------
-# Load SPECTER Model Once
+# Load Model Once (Global)
 # -----------------------------
-embedding_model = SentenceTransformer("sentence-transformers/allenai-specter")
+EMBEDDING_MODEL_NAME = "sentence-transformers/allenai-specter"
 
+embedding_model = SentenceTransformer(EMBEDDING_MODEL_NAME)
 
 # -----------------------------
-# Cached Query Embedding Function
+# Cached Query Embedding
 # -----------------------------
-@lru_cache(maxsize=200)
-def embed_query(query: str):
+@lru_cache(maxsize=512)
+def embed_query(query: str) -> Optional[np.ndarray]:
     """
-    Embed a text query using the SPECTER model (cached).
+    Convert a user query into a normalized semantic embedding.
 
     Parameters
     ----------
     query : str
-        The natural-language query to embed.
+        Natural language user query.
 
     Returns
     -------
-    list or None
-        The embedding vector as a Python list, or None if encoding fails.
+    np.ndarray | None
+        Normalized embedding vector (768-dim),
+        or None if input is invalid or encoding fails.
     """
-    start_time = time.time()
+
+    if not isinstance(query, str):
+        return None
+
+    query = query.strip()
+    if not query:
+        return None
 
     try:
-        vector = embedding_model.encode(query).tolist()
-        latency = round((time.time() - start_time) * 1000, 2)
-        print(f"Query embedded successfully | Latency: {latency} ms")
-        return vector
+        embedding = embedding_model.encode(query, normalize_embeddings=True)
+        return embedding
 
-    except Exception as e:
-        print(f"Embedding failed: {e}")
+    except Exception:
         return None
 
 
-# Local test
+# -----------------------------
+# Local Test 
+# -----------------------------
 if __name__ == "__main__":
-    query = "CRISPR gene editing in humans"
-    vector = embed_query(query)
+    q = "CRISPR gene editing in humans"
+    vec = embed_query(q)
 
-    print(f"Embedding vector length: {len(vector) if vector else 0}")
+    if vec is not None:
+        print("Embedding OK")
+        print("Vector shape:", vec.shape)
+    else:
+        print("Embedding failed")
